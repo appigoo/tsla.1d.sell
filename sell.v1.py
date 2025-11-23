@@ -371,6 +371,38 @@ VIX_LOW_THRESHOLD = st.number_input("VIX 平靜閾值 (低)", min_value=10.0, ma
 VIX_EMA_FAST = st.number_input("VIX 快速 EMA 期數", min_value=3, max_value=15, value=5, step=1)
 VIX_EMA_SLOW = st.number_input("VIX 慢速 EMA 期數", min_value=8, max_value=25, value=10, step=1)
 
+# 新增：Telegram 觸發條件表格（可編輯）
+st.subheader("📋 Telegram 觸發條件配置（可隨時編輯）")
+default_telegram_conditions = pd.DataFrame({
+    "排名": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+    "異動標記": [
+        "📉 價格趨勢賣出(量), 📉 連續向下賣出, 📉 SMA50下降趨勢, 📉 EMA-SMA Downtrend Sell",
+        "📉 High<Low, 📉 價格趨勢賣出, 📉 SMA50下降趨勢, 📉 EMA-SMA Downtrend Sell",
+        "📉 衰竭跳空(下), 📉 連續向下賣出, 📈 SMA50上升趨勢, 📉 新卖出信号",
+        "📉 價格趨勢賣出, 📉 普通跳空(下), 📉 SMA50下降趨勢, 📉 EMA-SMA Downtrend Sell",
+        "📉 SMA50下降趨勢, 📉 EMA-SMA Downtrend Sell, 📉 OBV突破賣出",
+        "📉 連續向下賣出, 📉 SMA50下降趨勢, 📉 新卖出信号",
+        "📉 價格趨勢賣出(量%), 📉 衰竭跳空(下), 📉 EMA-SMA Downtrend Sell",
+        "📈 SMA50上升趨勢, 📉 新卖出信号, 📈 EMA-SMA Uptrend Buy",
+        "📉 持續跳空(下), 📉 SMA50下降趨勢, 📉 EMA-SMA Downtrend Sell",
+        "📉 價格趨勢賣出, 📉 連續向下賣出, 📉 SMA50下降趨勢"
+    ],
+    "成交量標記": ["放量", "縮量", "放量", "縮量", "放量", "縮量", "放量", "縮量", "放量", "縮量"],
+    "K線形態": ["大陰線", "普通K線", "烏雲蓋頂", "射擊之星", "黃昏之星", "上吊線", "看跌吞沒", "大陰線", "普通K線", "錘子線"]
+})
+telegram_conditions = st.data_editor(
+    default_telegram_conditions,
+    num_rows="dynamic",
+    column_config={
+        "排名": st.column_config.NumberColumn("排名", disabled=True),
+        "異動標記": st.column_config.TextColumn("異動標記", help="輸入多個信號，用逗號分隔"),
+        "成交量標記": st.column_config.SelectboxColumn("成交量標記", options=["放量", "縮量"]),
+        "K線形態": st.column_config.TextColumn("K線形態", help="輸入K線形態名稱")
+    },
+    use_container_width=True,
+    hide_index=False
+)
+
 placeholder = st.empty()
 
 @st.cache_data(ttl=300)  # 性能优化：缓存K线形态计算结果，TTL=5分钟
@@ -1212,15 +1244,27 @@ while True:
                                     # 新增 VIX 趨勢参数
                                     vix_uptrend_sell, vix_downtrend_buy)
 
-                    # 其余原始代码不变
+                    # 修改：Telegram 發送邏輯（基於表格條件匹配）
                     if len(data["異動標記"]) > 0:
                         K_signals = str(data["異動標記"].iloc[-1])  # 最新一根K线的信号字符串
-                        # 将K信号拆分为列表
-                        K_signals_list = [s.strip() for s in K_signals.split(",")]
-                    
-                        # 检查是否所有用户选中的信号都存在于K信号中
-                        if all(signal in K_signals_list for signal in selected_signals):
-                            alertmsg = f"V2趨勢反轉,賣出訊號: {data['Datetime'].iloc[-1]} {ticker}:{selected_interval}:$ {data['Close'].iloc[-1].round(2)} *{data['異動標記'].iloc[-1]}*{data['成交量標記'].iloc[-1]}*{data['K線形態'].iloc[-1]}*{data['單根解讀'].iloc[-1]}* 同时出现全部信号 => {', '.join(selected_signals)}"
+                        K_signals_list = [s.strip() for s in K_signals.split(", ") if s.strip()]  # 拆分並過濾空
+                        current_volume_mark = data["成交量標記"].iloc[-1]
+                        current_kline_pattern = data["K線形態"].iloc[-1]
+                        
+                        matched_rank = None
+                        for idx, row in telegram_conditions.iterrows():
+                            required_signals = [s.strip() for s in str(row["異動標記"]).split(", ") if s.strip()]
+                            required_volume = row["成交量標記"]
+                            required_pattern = row["K線形態"]
+                            
+                            if (all(sig in K_signals_list for sig in required_signals) and
+                                current_volume_mark == required_volume and
+                                current_kline_pattern == required_pattern):
+                                matched_rank = row["排名"]
+                                break
+                        
+                        if matched_rank is not None:
+                            alertmsg = f"V2趨勢反轉,賣出訊號: {data['Datetime'].iloc[-1]} {ticker}:{selected_interval}:$ {data['Close'].iloc[-1].round(2)} *{data['異動標記'].iloc[-1]}*{data['成交量標記'].iloc[-1]}*{data['K線形態'].iloc[-1]}*{data['單根解讀'].iloc[-1]}* 匹配排名 {matched_rank} 條件"
                             send_telegram_alert(alertmsg)
                     ##########
                 # 添加 K 线图（含 EMA）、成交量柱状图和 RSI 子图（新增 VWAP/MFI/OBV traces）

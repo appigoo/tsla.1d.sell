@@ -313,9 +313,9 @@ percentile_options = [1, 5, 10, 20]
 refresh_options = [30, 60, 90, 144, 150, 180, 210, 240, 270, 300]
 
 st.title("📊 股票監控儀表板（含異動提醒與 Email 通知 ✅）")
-input_tickers = st.text_input("請輸入股票代號（逗號分隔）", value="TSLA, NIO, TSLL,XPEV,META")
+input_tickers = st.text_input("請輸入股票代號（逗號分隔）", value="TSLA, NIO, TSLL, XPEV, META, GOOGL")
 selected_tickers = [t.strip().upper() for t in input_tickers.split(",") if t.strip()]
-selected_period = st.selectbox("選擇時間範圍", period_options, index=4)
+selected_period = st.selectbox("選擇時間範圍", period_options, index=5)
 selected_interval = st.selectbox("選擇資料間隔", interval_options, index=8)
 PRICE_THRESHOLD = st.number_input("價格異動閾值 (%)", min_value=0.1, max_value=200.0, value=80.0, step=0.1)
 VOLUME_THRESHOLD = st.number_input("成交量異動閾值 (%)", min_value=0.1, max_value=200.0, value=80.0, step=0.1)

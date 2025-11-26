@@ -390,6 +390,7 @@ default_telegram_conditions = pd.DataFrame({
     "成交量標記": ["放量", "縮量", "放量", "縮量", "放量", "縮量", "放量", "縮量", "放量", "縮量"],
     "K線形態": ["大陰線", "普通K線", "烏雲蓋頂", "射擊之星", "黃昏之星", "上吊線", "看跌吞沒", "大陰線", "普通K線", "錘子線"]
 })
+default_telegram_conditions["排名"] = default_telegram_conditions["排名"].astype("string")
 telegram_conditions = st.data_editor(
     default_telegram_conditions,
     num_rows="dynamic",

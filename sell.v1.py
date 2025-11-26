@@ -395,13 +395,13 @@ telegram_conditions = st.data_editor(
     num_rows="dynamic",
     column_config={
         #"排名": st.column_config.NumberColumn("排名", disabled=True),
-        "排名": st.column_config.TextColumn("排名",help="可手動調整優先順序，支持重複或跳號（例如：1, 3, 5, 10）",required=False,),
+        "排名": st.column_config.TextColumn("排名",help="可手動調整優先順序，支持重複或跳號（例如：1, 3, 5, 10）",required=False),
         "異動標記": st.column_config.TextColumn("異動標記", help="輸入多個信號，用逗號分隔"),
         "成交量標記": st.column_config.SelectboxColumn("成交量標記", options=["放量", "縮量"]),
         "K線形態": st.column_config.TextColumn("K線形態", help="輸入K線形態名稱")
     },
     use_container_width=True,
-    hide_index=True
+    hide_index=False
 )
 
 placeholder = st.empty()

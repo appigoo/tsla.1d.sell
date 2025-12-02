@@ -313,7 +313,7 @@ percentile_options = [1, 5, 10, 20]
 refresh_options = [30, 60, 90, 144, 150, 180, 210, 240, 270, 300]
 
 st.title("📊 股票監控儀表板（含異動提醒與 Email 通知 ✅）")
-input_tickers = st.text_input("請輸入股票代號（逗號分隔）", value="TSLA, NIO, TSLL, XPEV, META, GOOGL")
+input_tickers = st.text_input("請輸入股票代號（逗號分隔）", value="TSLA, NIO, TSLL, XPEV, META, GOOGL， AAPL, NVDA, AMZN, MSFT, TSM")
 selected_tickers = [t.strip().upper() for t in input_tickers.split(",") if t.strip()]
 selected_period = st.selectbox("選擇時間範圍", period_options, index=5)
 selected_interval = st.selectbox("選擇資料間隔", interval_options, index=8)
@@ -1268,7 +1268,7 @@ while True:
                                 break
                         
                         if matched_rank is not None:
-                            alertmsg = f"1D 趨勢反轉,賣出訊號: {data['Datetime'].iloc[-1]} {ticker}:{selected_interval}:$ {data['Close'].iloc[-1].round(2)} *{data['異動標記'].iloc[-1]}*{data['成交量標記'].iloc[-1]}*{data['K線形態'].iloc[-1]}*{data['單根解讀'].iloc[-1]}* 匹配排名 {matched_rank} 條件"
+                            alertmsg = f"1D SELL 趨勢反轉,賣出訊號: {data['Datetime'].iloc[-1]} {ticker}:{selected_interval}:$ {data['Close'].iloc[-1].round(2)} *{data['異動標記'].iloc[-1]}*{data['成交量標記'].iloc[-1]}*{data['K線形態'].iloc[-1]}*{data['單根解讀'].iloc[-1]}* 匹配排名 {matched_rank} 條件"
                             send_telegram_alert(alertmsg)
                     ##########
                 # 添加 K 线图（含 EMA）、成交量柱状图和 RSI 子图（新增 VWAP/MFI/OBV traces）
